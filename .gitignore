@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.venv
+venv/
+*.egg-info/
+dist/
+build/
+
+# ML
+ml-pipeline/models/*.pt
+ml-pipeline/models/*.onnx
+ml-pipeline/models/*.bin
+ml-pipeline/models/*.xml
+ml-pipeline/datasets/*
+
+# Android
+android-kmp/.gradle/
+android-kmp/build/
+android-kmp/local.properties
+*.apk
+*.aab
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
