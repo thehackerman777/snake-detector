@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🐍 Etiquetado de Corn Snakes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; }
+        
+        .header { 
+            background: linear-gradient(135deg, #1e293b, #334155); 
+            padding: 1rem; 
+            text-align: center; 
+            border-bottom: 2px solid #22c55e;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h1 { color: #22c55e; font-size: 1.2rem; }
+        .header .stats { color: #94a3b8; font-size: 0.8rem; margin-top: 0.3rem; }
+        .progress-bar {
+            height: 4px; background: #1e293b; margin-top: 0.5rem; border-radius: 2px;
+        }
+        .progress-fill { height: 100%; background: #22c55e; border-radius: 2px; transition: width 0.3s; }
+
+        .main { max-width: 600px; margin: 0 auto; padding: 0.5rem; }
+        
+        .image-card {
+            background: #1e293b; border: 1px solid #334155; border-radius: 0.8rem;
+            margin-bottom: 0.8rem; overflow: hidden;
+        }
+        .image-card img { width: 100%; display: block; }
+        .image-card .filename {
+            padding: 0.4rem 0.8rem; font-size: 0.7rem; color: #64748b;
+            background: #0f172a; border-bottom: 1px solid #334155;
+        }
+        .image-card .label-actions {
+            display: flex; flex-wrap: wrap; gap: 0.3rem;
+            padding: 0.5rem; background: #1e293b;
+        }
+        .image-card .label-actions button {
+            flex: 1; min-width: 80px; padding: 0.5rem 0.3rem;
+            border: 1px solid #334155; border-radius: 0.4rem;
+            background: #0f172a; color: #94a3b8; font-size: 0.75rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .image-card .label-actions button:hover {
+            border-color: #22c55e; color: #22c55e;
+        }
+        .image-card .label-actions button.active {
+            background: #22c55e; color: #0f172a; border-color: #22c55e;
+            font-weight: bold;
+        }
+        .image-card .label-actions button.unknown-btn {
+            border-color: #ef4444; color: #ef4444;
+        }
+        .image-card .label-actions button.unknown-btn.active {
+            background: #ef4444; color: white; border-color: #ef4444;
+        }
+
+        .pagination {
+            display: flex; justify-content: center; gap: 0.3rem;
+            padding: 1rem; flex-wrap: wrap;
+        }
+        .pagination button {
+            padding: 0.4rem 0.8rem; border: 1px solid #334155; border-radius: 0.3rem;
+            background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 0.8rem;
+        }
+        .pagination button:hover { border-color: #22c55e; }
+        .pagination button.active { background: #22c55e; color: #0f172a; }
+        .pagination button:disabled { opacity: 0.3; cursor: default; }
+
+        .save-status {
+            text-align: center; padding: 0.3rem; font-size: 0.75rem;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #1e293b; border-top: 1px solid #334155;
+            transition: all 0.3s;
+        }
+        .save-status.saving { color: #f59e0b; }
+        .save-status.saved { color: #22c55e; }
+        .save-status.error { color: #ef4444; }
+
+        .empty-state {
+            text-align: center; padding: 3rem 1rem; color: #64748b;
+        }
+        .empty-state h2 { color: #22c55e; margin-bottom: 1rem; }
+
+        @media (max-width: 480px) {
+            .image-card .label-actions button { min-width: 60px; font-size: 0.7rem; padding: 0.4rem 0.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐍 Etiquetado de Corn Snakes</h1>
+        <div class="stats" id="stats">Cargando...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+    </div>
+
+    <div class="main" id="gallery"></div>
+    <div class="pagination" id="pagination"></div>
+    <div class="save-status" id="saveStatus">Listo</div>
+
+    <script>
+        const MORPHS = ["amelanistic", "anerythristic", "normal", "motley", "stripe", "snow", "palmetto", "tessera", "unknown"];
+        let currentPage = 1;
+        let totalPages = 1;
+        let pendingLabels = {};
+        let saveTimeout = null;
+
+        async function loadPage(page) {
+            currentPage = page;
+            const resp = await fetch(`/api/images?page=${page}&per_page=20`);
+            const data = await resp.json();
+            
+            totalPages = data.total_pages;
+            document.getElementById("stats").textContent = 
+                `${data.labeled} etiquetadas · ${data.unlabeled} pendientes · ${data.total} total`;
+            document.getElementById("progress").style.width = data.progress + "%";
+            
+            renderGallery(data.images);
+            renderPagination(data);
+        }
+
+        function renderGallery(images) {
+            const gallery = document.getElementById("gallery");
+            if (images.length === 0) {
+                gallery.innerHTML = '<div class="empty-state"><h2>✅ ¡Todas etiquetadas!</h2><p>No hay más imágenes pendientes.</p></div>';
+                return;
+            }
+            
+            gallery.innerHTML = images.map(img => {
+                const morph = pendingLabels[img.filename] || img.morph;
+                return `<div class="image-card">
+                    <div class="filename">${img.filename}</div>
+                    <img src="${img.url}" loading="lazy">
+                    <div class="label-actions">
+                        ${MORPHS.map(m => 
+                            `<button class="${m === 'unknown' ? 'unknown-btn ' : ''}${morph === m ? 'active' : ''}" 
+                                     onclick="labelImage('${img.filename}', '${m}', this)">${m}</button>`
+                        ).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderPagination(data) {
+            const nav = document.getElementById("pagination");
+            let html = `<button onclick="loadPage(1)" ${currentPage === 1 ? 'disabled' : ''}>«</button>`;
+            html += `<button onclick="loadPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+            
+            for (let i = Math.max(1, currentPage - 3); i <= Math.min(data.total_pages, currentPage + 3); i++) {
+                html += `<button onclick="loadPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+            }
+            
+            html += `<button onclick="loadPage(${currentPage + 1})" ${currentPage === data.total_pages ? 'disabled' : ''}>›</button>`;
+            html += `<button onclick="loadPage(${data.total_pages})" ${currentPage === data.total_pages ? 'disabled' : ''}>»</button>`;
+            
+            if (data.total_pages > 0) {
+                html += `<span style="color:#64748b;font-size:0.75rem;margin-left:0.5rem">Página ${currentPage}/${data.total_pages}</span>`;
+            }
+            
+            nav.innerHTML = html;
+        }
+
+        async function labelImage(filename, morph, btn) {
+            const status = document.getElementById("saveStatus");
+            status.textContent = "Guardando...";
+            status.className = "save-status saving";
+            
+            pendingLabels[filename] = morph;
+            
+            try {
+                const resp = await fetch("/api/label", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({filename, morph})
+                });
+                
+                if (resp.ok) {
+                    status.textContent = `✓ ${filename} → ${morph}`;
+                    status.className = "save-status saved";
+                    
+                    // Update buttons for this card
+                    const buttons = btn.parentElement.querySelectorAll("button");
+                    buttons.forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    
+                    // Refresh stats
+                    const statsResp = await fetch("/api/stats");
+                    const stats = await statsResp.json();
+                    document.getElementById("stats").textContent = 
+                        `${stats.labeled} etiquetadas · ${stats.unlabeled} pendientes · ${stats.total} total`;
+                    document.getElementById("progress").style.width = stats.progress + "%";
+                    
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        status.textContent = "Listo";
+                        status.className = "save-status";
+                    }, 2000);
+                } else {
+                    status.textContent = "✗ Error al guardar";
+                    status.className = "save-status error";
+                }
+            } catch(e) {
+                status.textContent = "✗ Error de red";
+                status.className = "save-status error";
+            }
+        }
+
+        // Load first page
+        loadPage(1);
+    </script>
+</body>
+</html>

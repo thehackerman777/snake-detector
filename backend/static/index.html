@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Detector 🐍 - Validación</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
+        header { background: linear-gradient(135deg, #1e293b, #334155); padding: 1.5rem; text-align: center; border-bottom: 2px solid #22c55e; }
+        h1 { font-size: 1.8rem; color: #22c55e; }
+        h1 span { color: #e2e8f0; }
+        .subtitle { color: #94a3b8; margin-top: 0.3rem; font-size: 0.9rem; }
+        main { flex: 1; max-width: 800px; margin: 2rem auto; padding: 0 1rem; width: 100%; }
+        .card { background: #1e293b; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #334155; }
+        .card h2 { color: #22c55e; margin-bottom: 1rem; font-size: 1.2rem; }
+        .image-container { text-align: center; }
+        .image-container img { max-width: 100%; border-radius: 0.5rem; border: 2px solid #334155; }
+        .caption { color: #94a3b8; margin-top: 0.5rem; font-size: 0.9rem; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+        .info-item { background: #0f172a; padding: 1rem; border-radius: 0.5rem; text-align: center; }
+        .info-item .label { color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
+        .info-item .value { color: #22c55e; font-size: 1.2rem; font-weight: bold; margin-top: 0.3rem; }
+        .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 0.5rem; }
+        .status-dot.online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .status-dot.offline { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        footer { text-align: center; padding: 1rem; color: #64748b; font-size: 0.8rem; border-top: 1px solid #1e293b; }
+        .endpoints { margin-top: 1rem; }
+        .endpoint { background: #0f172a; padding: 0.5rem 1rem; border-radius: 0.3rem; margin: 0.3rem 0; font-family: monospace; font-size: 0.85rem; color: #38bdf8; }
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🐍 Snake Detector <span>| Validación</span></h1>
+        <div class="subtitle">Sistema de detección de serpientes del maíz con IA</div>
+    </header>
+    <main>
+        <div class="card">
+            <h2>🟢 Estado del Servidor</h2>
+            <p><span class="status-dot online"></span>Servidor OCI operativo</p>
+            <p style="margin-top:0.5rem;color:#94a3b8;">IP: 157.137.233.78 | Región: sa-bogota-1</p>
+        </div>
+        
+        <div class="card image-container">
+            <h2>📷 Imagen de Prueba - Pantherophis guttatus</h2>
+            <img src="/static/corn-snake-sample.jpg" alt="Corn Snake" id="snake-image">
+            <div class="caption">Serpiente del maíz - Fase Normal (Wild-type)</div>
+        </div>
+        
+        <div class="card">
+            <h2>📊 Información del Sistema</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="label">Estado</div>
+                    <div class="value" id="api-status">✅ Online</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">API</div>
+                    <div class="value">v0.1.0</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Infra</div>
+                    <div class="value">OCI Bogotá</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">Modelo</div>
+                    <div class="value" id="model-status">⏳ Pendiente</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🔌 Endpoints</h2>
+            <div class="endpoints">
+                <div class="endpoint">GET /health - Health check</div>
+                <div class="endpoint">POST /api/v1/detect - Detect morphology</div>
+                <div class="endpoint">WS /api/v1/ws - WebSocket real-time</div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        Snake Detector AI | OpenClaw Orchestrated | 2026
+    </footer>
+</body>
+</html>

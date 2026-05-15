@@ -1,0 +1,12 @@
+names:
+- amelanistic
+- anerythristic
+- normal
+- motley
+- stripe
+- snow
+nc: 6
+path: /home/giutaca123/workspace/snake-detector/datasets/snake
+test: images/test
+train: images/train
+val: images/val

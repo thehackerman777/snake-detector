@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 Dataset - Snake Detector</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; padding: 0.8rem; }
+        h1 { color: #22c55e; text-align: center; font-size: 1.2rem; margin-bottom: 0.2rem; }
+        .stats { text-align: center; color: #94a3b8; font-size: 0.75rem; margin-bottom: 0.8rem; }
+        .back-link { text-align: center; margin-bottom: 0.8rem; }
+        .back-link a { color: #38bdf8; text-decoration: none; font-size: 0.85rem; }
+        
+        .morph-group { margin-bottom: 1rem; }
+        .morph-header { 
+            background: #1e293b; border-radius: 0.5rem; padding: 0.4rem 0.8rem; margin-bottom: 0.4rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #334155;
+        }
+        .morph-header .name { color: #22c55e; font-weight: bold; }
+        .morph-header .badge { color: #94a3b8; font-size: 0.75rem; }
+        
+        .split-label { color: #64748b; font-size: 0.7rem; text-transform: uppercase; margin: 0.3rem 0; }
+        .image-row { display: flex; gap: 0.3rem; overflow-x: auto; padding-bottom: 0.3rem; }
+        .image-row img { width: 80px; height: 80px; object-fit: cover; border-radius: 0.3rem; border: 1px solid #334155; flex-shrink: 0; }
+        
+        footer { text-align: center; padding: 1rem; color: #64748b; font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+    <h1>🐍 Dataset Sintético</h1>
+    <div class="stats">180 imágenes · 6 clases morfológicas</div>
+    <div class="back-link"><a href="/validate">← Volver</a></div>
+    <div id="content"></div>
+    <footer>Snake Detector AI · OpenClaw Orchestrated</footer>
+    <script>
+        const data = {"amelanistic": {"train": ["amelanistic_000.jpg", "amelanistic_001.jpg", "amelanistic_002.jpg", "amelanistic_004.jpg", "amelanistic_006.jpg", "amelanistic_007.jpg", "amelanistic_010.jpg", "amelanistic_011.jpg", "amelanistic_014.jpg", "amelanistic_016.jpg", "amelanistic_019.jpg", "amelanistic_020.jpg", "amelanistic_021.jpg", "amelanistic_023.jpg", "amelanistic_024.jpg", "amelanistic_025.jpg", "amelanistic_026.jpg", "amelanistic_027.jpg", "amelanistic_029.jpg"], "val": ["amelanistic_003.jpg", "amelanistic_005.jpg", "amelanistic_008.jpg", "amelanistic_009.jpg", "amelanistic_012.jpg", "amelanistic_015.jpg", "amelanistic_017.jpg"], "test": ["amelanistic_013.jpg", "amelanistic_018.jpg", "amelanistic_022.jpg", "amelanistic_028.jpg"]}, "anerythristic": {"train": ["anerythristic_000.jpg", "anerythristic_001.jpg", "anerythristic_002.jpg", "anerythristic_003.jpg", "anerythristic_004.jpg", "anerythristic_005.jpg", "anerythristic_006.jpg", "anerythristic_007.jpg", "anerythristic_008.jpg", "anerythristic_009.jpg", "anerythristic_010.jpg", "anerythristic_013.jpg", "anerythristic_014.jpg", "anerythristic_015.jpg", "anerythristic_017.jpg", "anerythristic_018.jpg", "anerythristic_019.jpg", "anerythristic_020.jpg", "anerythristic_021.jpg", "anerythristic_023.jpg", "anerythristic_024.jpg", "anerythristic_025.jpg", "anerythristic_029.jpg"], "val": ["anerythristic_011.jpg", "anerythristic_012.jpg", "anerythristic_026.jpg", "anerythristic_028.jpg"], "test": ["anerythristic_016.jpg", "anerythristic_022.jpg", "anerythristic_027.jpg"]}, "motley": {"train": ["motley_001.jpg", "motley_003.jpg", "motley_006.jpg", "motley_007.jpg", "motley_008.jpg", "motley_009.jpg", "motley_012.jpg", "motley_014.jpg", "motley_015.jpg", "motley_017.jpg", "motley_018.jpg", "motley_019.jpg", "motley_020.jpg", "motley_021.jpg", "motley_022.jpg", "motley_023.jpg", "motley_024.jpg", "motley_026.jpg", "motley_027.jpg", "motley_029.jpg"], "val": ["motley_005.jpg", "motley_010.jpg", "motley_011.jpg", "motley_013.jpg", "motley_016.jpg", "motley_025.jpg"], "test": ["motley_000.jpg", "motley_002.jpg", "motley_004.jpg", "motley_028.jpg"]}, "normal": {"train": ["normal_000.jpg", "normal_001.jpg", "normal_002.jpg", "normal_003.jpg", "normal_004.jpg", "normal_005.jpg", "normal_007.jpg", "normal_008.jpg", "normal_009.jpg", "normal_013.jpg", "normal_015.jpg", "normal_017.jpg", "normal_018.jpg", "normal_019.jpg", "normal_022.jpg", "normal_023.jpg", "normal_024.jpg", "normal_025.jpg", "normal_026.jpg", "normal_027.jpg", "normal_028.jpg", "normal_029.jpg"], "val": ["normal_010.jpg", "normal_012.jpg", "normal_014.jpg", "normal_016.jpg"], "test": ["normal_006.jpg", "normal_011.jpg", "normal_020.jpg", "normal_021.jpg"]}, "snow": {"train": ["snow_000.jpg", "snow_002.jpg", "snow_003.jpg", "snow_004.jpg", "snow_005.jpg", "snow_006.jpg", "snow_007.jpg", "snow_008.jpg", "snow_013.jpg", "snow_014.jpg", "snow_015.jpg", "snow_017.jpg", "snow_018.jpg", "snow_019.jpg", "snow_020.jpg", "snow_021.jpg", "snow_022.jpg", "snow_025.jpg", "snow_026.jpg", "snow_027.jpg", "snow_029.jpg"], "val": ["snow_009.jpg", "snow_011.jpg", "snow_012.jpg", "snow_016.jpg"], "test": ["snow_001.jpg", "snow_010.jpg", "snow_023.jpg", "snow_024.jpg", "snow_028.jpg"]}, "stripe": {"train": ["stripe_001.jpg", "stripe_002.jpg", "stripe_005.jpg", "stripe_006.jpg", "stripe_007.jpg", "stripe_008.jpg", "stripe_012.jpg", "stripe_013.jpg", "stripe_014.jpg", "stripe_015.jpg", "stripe_016.jpg", "stripe_017.jpg", "stripe_018.jpg", "stripe_020.jpg", "stripe_022.jpg", "stripe_024.jpg", "stripe_026.jpg", "stripe_027.jpg", "stripe_028.jpg", "stripe_029.jpg"], "val": ["stripe_000.jpg", "stripe_003.jpg", "stripe_010.jpg", "stripe_025.jpg"], "test": ["stripe_004.jpg", "stripe_009.jpg", "stripe_011.jpg", "stripe_019.jpg", "stripe_021.jpg", "stripe_023.jpg"]}};
+        const content = document.getElementById("content");
+        let html = "";
+        
+        for (const [morph, splits] of Object.entries(data)) {
+            let total = 0;
+            for (const s of Object.values(splits)) total += s.length;
+            
+            html += `<div class="morph-group">
+                <div class="morph-header">
+                    <span class="name">${morph}</span>
+                    <span class="badge">${total} imágenes</span>
+                </div>`;
+            
+            for (const [split, images] of Object.entries(splits)) {
+                if (images.length === 0) continue;
+                html += `<div class="split-label">${split} (${images.length})</div>
+                    <div class="image-row">`;
+                for (const img of images) {
+                    html += `<img src="/dataset/${split}/${img}" loading="lazy">`;
+                }
+                html += `</div>`;
+            }
+            
+            html += `</div>`;
+        }
+        
+        content.innerHTML = html;
+    </script>
+</body>
+</html>
