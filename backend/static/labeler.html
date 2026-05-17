@@ -1,216 +1,690 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>🐍 Etiquetado de Corn Snakes</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; }
-        
-        .header { 
-            background: linear-gradient(135deg, #1e293b, #334155); 
-            padding: 1rem; 
-            text-align: center; 
-            border-bottom: 2px solid #22c55e;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        .header h1 { color: #22c55e; font-size: 1.2rem; }
-        .header .stats { color: #94a3b8; font-size: 0.8rem; margin-top: 0.3rem; }
-        .progress-bar {
-            height: 4px; background: #1e293b; margin-top: 0.5rem; border-radius: 2px;
-        }
-        .progress-fill { height: 100%; background: #22c55e; border-radius: 2px; transition: width 0.3s; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corn Snake Morph Labeler</title>
+<style>
+:root {
+  --bg-primary: #0b0d11;
+  --bg-secondary: #111318;
+  --bg-tertiary: #181b21;
+  --bg-card: #1a1d24;
+  --bg-hover: #21252e;
+  --border: #22262f;
+  --border-light: #2a2f3a;
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa0a8;
+  --text-tertiary: #5c6270;
+  --accent: #4f8cff;
+  --accent-dim: #2d5bb8;
+  --accent-bg: rgba(79, 140, 255, 0.08);
+  --green: #34d399;
+  --green-bg: rgba(52, 211, 153, 0.08);
+  --amber: #fbbf24;
+  --amber-bg: rgba(251, 191, 36, 0.08);
+  --red: #f87171;
+  --red-bg: rgba(248, 113, 113, 0.08);
+  --purple: #a78bfa;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+  --shadow: 0 2px 8px rgba(0,0,0,.3);
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Inter', 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; background:var(--bg-primary); color:var(--text-primary); font-family:var(--font); font-size:13px; -webkit-font-smoothing:antialiased; }
 
-        .main { max-width: 600px; margin: 0 auto; padding: 0.5rem; }
-        
-        .image-card {
-            background: #1e293b; border: 1px solid #334155; border-radius: 0.8rem;
-            margin-bottom: 0.8rem; overflow: hidden;
-        }
-        .image-card img { width: 100%; display: block; }
-        .image-card .filename {
-            padding: 0.4rem 0.8rem; font-size: 0.7rem; color: #64748b;
-            background: #0f172a; border-bottom: 1px solid #334155;
-        }
-        .image-card .label-actions {
-            display: flex; flex-wrap: wrap; gap: 0.3rem;
-            padding: 0.5rem; background: #1e293b;
-        }
-        .image-card .label-actions button {
-            flex: 1; min-width: 80px; padding: 0.5rem 0.3rem;
-            border: 1px solid #334155; border-radius: 0.4rem;
-            background: #0f172a; color: #94a3b8; font-size: 0.75rem;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .image-card .label-actions button:hover {
-            border-color: #22c55e; color: #22c55e;
-        }
-        .image-card .label-actions button.active {
-            background: #22c55e; color: #0f172a; border-color: #22c55e;
-            font-weight: bold;
-        }
-        .image-card .label-actions button.unknown-btn {
-            border-color: #ef4444; color: #ef4444;
-        }
-        .image-card .label-actions button.unknown-btn.active {
-            background: #ef4444; color: white; border-color: #ef4444;
-        }
+/* Layout */
+.app { display:flex; height:100vh; }
+.panel-left { width:280px; min-width:280px; background:var(--bg-secondary); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.panel-right { width:340px; min-width:340px; background:var(--bg-secondary); border-left:1px solid var(--border); display:flex; flex-direction:column; overflow-y:auto; }
+.viewport { flex:1; display:flex; flex-direction:column; background:var(--bg-primary); position:relative; overflow:hidden; }
 
-        .pagination {
-            display: flex; justify-content: center; gap: 0.3rem;
-            padding: 1rem; flex-wrap: wrap;
-        }
-        .pagination button {
-            padding: 0.4rem 0.8rem; border: 1px solid #334155; border-radius: 0.3rem;
-            background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 0.8rem;
-        }
-        .pagination button:hover { border-color: #22c55e; }
-        .pagination button.active { background: #22c55e; color: #0f172a; }
-        .pagination button:disabled { opacity: 0.3; cursor: default; }
+/* Top bar */
+.topbar { height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:var(--bg-secondary); border-bottom:1px solid var(--border); }
+.topbar .logo { font-weight:600; font-size:13px; color:var(--text-primary); letter-spacing:-0.01em; }
+.topbar .logo span { color:var(--accent); }
+.topbar .stats { font-size:11px; color:var(--text-tertiary); display:flex; gap:16px; }
+.topbar .stats strong { color:var(--text-secondary); font-weight:500; }
 
-        .save-status {
-            text-align: center; padding: 0.3rem; font-size: 0.75rem;
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: #1e293b; border-top: 1px solid #334155;
-            transition: all 0.3s;
-        }
-        .save-status.saving { color: #f59e0b; }
-        .save-status.saved { color: #22c55e; }
-        .save-status.error { color: #ef4444; }
+/* Left panel */
+.panel-header { padding:12px 14px; border-bottom:1px solid var(--border); }
+.panel-header h3 { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--text-tertiary); margin-bottom:8px; }
+.search-box { position:relative; }
+.search-box input { width:100%; height:32px; padding:0 10px 0 30px; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-size:12px; outline:none; transition:border .2s; }
+.search-box input:focus { border-color:var(--accent); }
+.search-box svg { position:absolute; left:9px; top:8px; color:var(--text-tertiary); }
 
-        .empty-state {
-            text-align: center; padding: 3rem 1rem; color: #64748b;
-        }
-        .empty-state h2 { color: #22c55e; margin-bottom: 1rem; }
+.image-list { flex:1; overflow-y:auto; padding:4px 0; }
+.image-item { display:flex; align-items:center; gap:10px; padding:8px 14px; cursor:pointer; transition:all .15s; border-left:3px solid transparent; min-height:48px; }
+.image-item:hover { background:var(--bg-hover); }
+.image-item.active { background:var(--accent-bg); border-left-color:var(--accent); }
+.image-item .thumb { width:36px; height:36px; border-radius:4px; overflow:hidden; flex-shrink:0; background:var(--bg-tertiary); }
+.image-item .thumb img { width:100%; height:100%; object-fit:cover; }
+.image-item .info { flex:1; min-width:0; }
+.image-item .name { font-size:12px; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.image-item .sub { font-size:10px; color:var(--text-tertiary); margin-top:1px; }
+.image-item .badge { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.badge-pending { background:var(--text-tertiary); }
+.badge-reviewed { background:var(--green); }
+.badge-error { background:var(--red); }
+.badge-inconsistent { background:var(--amber); }
+.badge-lowq { background:var(--purple); }
+.status-bar { padding:8px 14px; border-top:1px solid var(--border); display:flex; justify-content:space-between; font-size:11px; color:var(--text-tertiary); }
+.status-bar strong { color:var(--text-secondary); }
 
-        @media (max-width: 480px) {
-            .image-card .label-actions button { min-width: 60px; font-size: 0.7rem; padding: 0.4rem 0.2rem; }
-        }
-    </style>
+/* Viewport */
+.view-header { height:36px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; background:var(--bg-primary); border-bottom:1px solid var(--border); }
+.view-header .filename { font-size:11px; color:var(--text-secondary); font-family:var(--mono); }
+.view-header .info { font-size:11px; color:var(--text-tertiary); display:flex; gap:12px; }
+.view-header .info .dot { display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px; vertical-align:middle; }
+.canvas-wrap { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; background:radial-gradient(ellipse at center, #13161c 0%, #0b0d11 100%); }
+.canvas-wrap img { max-width:100%; max-height:100%; object-fit:contain; transition:transform .2s; cursor:grab; user-select:none; -webkit-user-drag:none; }
+.canvas-wrap img.zoomed { cursor:grab; }
+.canvas-wrap .zoom-hint { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); padding:4px 12px; background:rgba(0,0,0,.6); border-radius:100px; font-size:10px; color:var(--text-tertiary); pointer-events:none; }
+.keyboard-hint { position:absolute; bottom:16px; right:16px; display:flex; gap:4px; }
+.keyboard-hint kbd { padding:2px 6px; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:3px; font-size:9px; font-family:var(--mono); color:var(--text-tertiary); }
+
+/* Right panel */
+.panel-content { padding:14px; display:flex; flex-direction:column; gap:14px; }
+.section-title { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--text-tertiary); margin-bottom:6px; }
+.morph-display { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:14px; text-align:center; }
+.morph-display .current-morph { font-size:18px; font-weight:600; color:var(--text-primary); }
+.morph-display .confidence { margin-top:6px; display:flex; align-items:center; gap:8px; justify-content:center; }
+.morph-display .confidence .bar { width:80px; height:4px; background:var(--bg-tertiary); border-radius:2px; overflow:hidden; }
+.morph-display .confidence .bar-fill { height:100%; border-radius:2px; transition:width .3s; }
+.morph-selector { position:relative; }
+.morph-selector input { width:100%; height:36px; padding:0 12px; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-size:13px; outline:none; }
+.morph-selector input:focus { border-color:var(--accent); }
+.morph-suggestions { position:absolute; top:100%; left:0; right:0; background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-sm); margin-top:4px; max-height:200px; overflow-y:auto; z-index:20; display:none; box-shadow:var(--shadow); }
+.morph-suggestions.show { display:block; }
+.morph-suggestions div { padding:8px 12px; cursor:pointer; font-size:12px; color:var(--text-secondary); transition:all .1s; display:flex; justify-content:space-between; }
+.morph-suggestions div:hover, .morph-suggestions div.highlighted { background:var(--accent-bg); color:var(--accent); }
+.morph-suggestions .alias { font-size:10px; color:var(--text-tertiary); }
+.review-buttons { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.review-btn { padding:8px; border:none; border-radius:var(--radius-sm); font-size:11px; font-weight:500; cursor:pointer; transition:all .15s; }
+.review-btn:hover { filter:brightness(1.15); }
+.review-btn.primary { background:var(--accent); color:#fff; }
+.review-btn.green { background:var(--green-bg); color:var(--green); border:1px solid rgba(52,211,153,.2); }
+.review-btn.amber { background:var(--amber-bg); color:var(--amber); border:1px solid rgba(251,191,36,.2); }
+.review-btn.red { background:var(--red-bg); color:var(--red); border:1px solid rgba(248,113,113,.2); }
+.review-btn.purple { background:rgba(167,139,250,.08); color:var(--purple); border:1px solid rgba(167,139,250,.2); }
+.info-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:12px; }
+.info-card .row { display:flex; justify-content:space-between; padding:4px 0; font-size:11px; }
+.info-card .row .label { color:var(--text-tertiary); }
+.info-card .row .value { color:var(--text-secondary); }
+.genetics { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:12px; }
+.genetics .gene { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; background:var(--accent-bg); border-radius:100px; font-size:10px; color:var(--accent); margin:2px; }
+.aliases { display:flex; flex-wrap:wrap; gap:4px; }
+.aliases .alias-tag { padding:2px 8px; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:100px; font-size:10px; color:var(--text-tertiary); }
+.warning { display:flex; align-items:flex-start; gap:8px; padding:10px 12px; background:var(--amber-bg); border:1px solid rgba(251,191,36,.15); border-radius:var(--radius-sm); font-size:11px; color:var(--amber); }
+.warning svg { margin-top:1px; flex-shrink:0; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border-light); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--text-tertiary); }
+
+/* Animations */
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+.panel-content { animation:fadeIn .2s ease-out; }
+
+/* Selection prevention */
+.no-select { user-select:none; -webkit-user-select:none; }
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>🐍 Etiquetado de Corn Snakes</h1>
-        <div class="stats" id="stats">Cargando...</div>
-        <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+<div class="app no-select" id="app">
+  <!-- Left Panel -->
+  <div class="panel-left">
+    <div class="panel-header">
+      <h3>Dataset</h3>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="searchInput" placeholder="Buscar imagen..." oninput="filterImages()">
+      </div>
     </div>
+    <div class="image-list" id="imageList"></div>
+    <div class="status-bar">
+      <span id="labeledCount">0 etiquetadas</span>
+      <span id="totalCount">0 imágenes</span>
+    </div>
+  </div>
 
-    <div class="main" id="gallery"></div>
-    <div class="pagination" id="pagination"></div>
-    <div class="save-status" id="saveStatus">Listo</div>
+  <!-- Viewport -->
+  <div class="viewport">
+    <div class="view-header">
+      <span class="filename" id="currentFilename">—</span>
+      <span class="info" id="viewInfo">
+        <span id="navPosition">0 / 0</span>
+        <span>·</span>
+        <span id="zoomLevel">100%</span>
+      </span>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap">
+      <img id="mainImage" src="" alt="Snake" style="display:none">
+      <div class="zoom-hint">Scroll para zoom · Arrastrar para mover</div>
+      <div class="keyboard-hint">
+        <kbd>←</kbd><kbd>→</kbd>
+        <kbd style="margin-left:4px">1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd><kbd>5</kbd>
+      </div>
+    </div>
+  </div>
 
-    <script>
-        const MORPHS = ["amelanistic", "anerythristic", "normal", "motley", "stripe", "snow", "palmetto", "tessera", "unknown"];
-        let currentPage = 1;
-        let totalPages = 1;
-        let pendingLabels = {};
-        let saveTimeout = null;
+  <!-- Right Panel -->
+  <div class="panel-right" id="rightPanel">
+    <div class="panel-content">
+      <div>
+        <div class="section-title">Morph Clasificado</div>
+        <div class="morph-display">
+          <div class="current-morph" id="currentMorph">—</div>
+          <div class="confidence">
+            <span style="font-size:11px;color:var(--text-tertiary);">Confianza</span>
+            <div class="bar"><div class="bar-fill" id="confBar" style="width:0%;background:var(--text-tertiary)"></div></div>
+            <span style="font-size:11px;font-weight:600;font-family:var(--mono);color:var(--text-secondary);" id="confValue">—</span>
+          </div>
+        </div>
+      </div>
 
-        async function loadPage(page) {
-            currentPage = page;
-            const resp = await fetch(`/api/images?page=${page}&per_page=20`);
-            const data = await resp.json();
-            
-            totalPages = data.total_pages;
-            document.getElementById("stats").textContent = 
-                `${data.labeled} etiquetadas · ${data.unlabeled} pendientes · ${data.total} total`;
-            document.getElementById("progress").style.width = data.progress + "%";
-            
-            renderGallery(data.images);
-            renderPagination(data);
+      <div>
+        <div class="section-title">Asignar Morph</div>
+        <div class="morph-selector">
+          <input id="morphInput" placeholder="Buscar morph..." autocomplete="off" oninput="searchMorphs(this.value)" onkeydown="onMorphKeydown(event)">
+          <div class="morph-suggestions" id="morphSuggestions"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Estado de Revisión</div>
+        <div class="review-buttons">
+          <button class="review-btn green" onclick="setStatus('reviewed')">✓ Revisado</button>
+          <button class="review-btn amber" onclick="setStatus('inconsistent')">⚠ Inconsistente</button>
+          <button class="review-btn red" onclick="setStatus('error')">✗ Error</button>
+          <button class="review-btn purple" onclick="setStatus('lowq')">◐ Baja calidad</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Información Genética</div>
+        <div class="genetics" id="geneticsPanel">
+          <div style="font-size:11px;color:var(--text-tertiary);">Selecciona un morph para ver información genética</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Aliases</div>
+        <div class="aliases" id="aliasesPanel">
+          <span style="font-size:11px;color:var(--text-tertiary);">—</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">Advertencias</div>
+        <div id="warningsPanel"></div>
+      </div>
+
+      <div class="info-card" id="imageInfo">
+        <div class="row"><span class="label">Imagen</span><span class="value" id="imgFile">—</span></div>
+        <div class="row"><span class="label">Tamaño</span><span class="value" id="imgSize">—</span></div>
+        <div class="row"><span class="label">Morph asignado</span><span class="value" id="imgMorph">—</span></div>
+        <div class="row"><span class="label">Estado</span><span class="value" id="imgStatus">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== MORPH DATABASE ======
+const MORPH_DB = [
+  // Recesivos Simples
+  {id:"amelanistic",name:"Amelanistic",aliases:["Albino","Amel","Orange"],
+   genes:["amelanistic"],type:"recessive",inheritance:"recessive",
+   description:"Ausencia total de melanina. Ojos rojos/rosados. Fondo naranja con monturas rojas."},
+  {id:"anerythristic",name:"Anerythristic",aliases:["Anery A","Anery","Black & White"],
+   genes:["anerythristic"],type:"recessive",inheritance:"recessive",
+   description:"Ausencia de eritrina. Tonos grises, negros y marrones."},
+  {id:"charcoal",name:"Charcoal",aliases:["Anery B"],genes:["charcoal"],type:"recessive",inheritance:"recessive",
+   description:"Similar a Anery pero con menor contraste. Grises más suaves."},
+  {id:"cinder",name:"Cinder",aliases:["Z&A Anery"],genes:["cinder"],type:"recessive",inheritance:"recessive",
+   description:"Aneritrístico recesivo único. Patrón reducido."},
+  {id:"lava",name:"Lava",aliases:[],genes:["lava"],type:"recessive",inheritance:"recessive",
+   description:"Dilución extrema. Ojos de color lava."},
+  {id:"dilute",name:"Dilute",aliases:[],genes:["dilute"],type:"recessive",inheritance:"recessive",
+   description:"Dilución general del pigmento. Colores pastel."},
+  {id:"sunkissed",name:"Sunkissed",aliases:["SunKissed"],genes:["sunkissed"],type:"recessive",inheritance:"recessive",
+   description:"Hipomelanismo. Colores naranjas brillantes y lavanda."},
+  {id:"carmel",name:"Carmel",aliases:["Caramel"],genes:["carmel"],type:"recessive",inheritance:"recessive",
+   description:"Dilución de melanina. Tonos caramelo y avellana."},
+  {id:"hypo",name:"Hypomelanistic",aliases:["Hypo","Ghost"],genes:["hypo"],type:"recessive",inheritance:"recessive"},
+  
+  // Patrón
+  {id:"motley",name:"Motley",aliases:[],genes:["motley"],type:"pattern",inheritance:"recessive",
+   description:"Fusión de monturas dorsales en formas geométricas."},
+  {id:"stripe",name:"Stripe",aliases:[],genes:["stripe"],type:"pattern",inheritance:"recessive",
+   description:"Líneas longitudinales ininterrumpidas."},
+  {id:"terrazzo",name:"Terrazzo",aliases:[],genes:["terrazzo"],type:"pattern",inheritance:"recessive",
+   description:"Patrón moteado sin monturas definidas."},
+  {id:"diffused",name:"Diffused",aliases:["Bloodred"],genes:["diffused"],type:"pattern",inheritance:"recessive",
+   description:"Difusión lateral. Patrón reducido. Vientre rojo."},
+  
+  // Dominante / Codominante
+  {id:"tessera",name:"Tessera",aliases:[],genes:["tessera"],type:"dominant",inheritance:"dominant",
+   description:"Franja dorsal prístina con mosaicos laterales."},
+  {id:"masque",name:"Masque",aliases:[],genes:["masque"],type:"dominant",inheritance:"dominant",
+   description:"Máscara oscura en la cabeza."},
+  {id:"palmetto",name:"Palmetto",aliases:[],genes:["palmetto"],type:"dominant",inheritance:"dominant",
+   description:"Base leucística blanca con escamas pigmentadas esporádicas."},
+  {id:"buf",name:"Buf",aliases:[],genes:["buf"],type:"dominant",inheritance:"dominant",
+   description:"Coloración amarillenta general."},
+  
+  // Compuestos
+  {id:"snow",name:"Snow",aliases:["Blizzard"],genes:["amelanistic","anerythristic"],type:"compound",
+   description:"Amel + Anery. Fenotipo blanco con patrones rosados."},
+  {id:"blizzard",name:"Blizzard",aliases:[],genes:["amelanistic","charcoal"],type:"compound",
+   description:"Amel + Charcoal. Casi blanco puro sin patrón."},
+  {id:"butter",name:"Butter",aliases:[],genes:["amelanistic","carmel"],type:"compound",
+   description:"Amel + Carmel. Amarillo mantequilla con ojos rosados."},
+  {id:"avalanche",name:"Avalanche",aliases:[],genes:["amelanistic","anerythristic","diffused"],type:"compound",
+   description:"Amel + Anery + Diffused. Blanco sin patrón lateral."},
+  {id:"pewter",name:"Pewter",aliases:[],genes:["charcoal","diffused"],type:"compound",
+   description:"Charcoal + Diffused. Gris plateado difuso."},
+  {id:"plasma",name:"Plasma",aliases:[],genes:["dilute","diffused"],type:"compound",
+   description:"Dilute + Diffused. Lila pastel difuso."},
+  {id:"opal",name:"Opal",aliases:[],genes:["amelanistic","dilute","diffused"],type:"compound",
+   description:"Amel + Dilute + Diffused. Blanco opalescente."},
+  {id:"phantom",name:"Phantom",aliases:[],genes:["hypo","charcoal"],type:"compound",
+   description:"Hypo + Charcoal. Gris fantasma."},
+  {id:"ghost",name:"Ghost",aliases:[],genes:["hypo","anerythristic"],type:"compound",
+   description:"Hypo + Anery. Gris pálido fantasmal."},
+  {id:"coral",name:"Coral",aliases:[],genes:["hypo","carmel"],type:"compound",
+   description:"Hypo + Carmel. Coral suave rosa-naranja."},
+  {id:"fire",name:"Fire",aliases:[],genes:["amelanistic","diffused"],type:"compound",
+   description:"Amel + Diffused. Naranja/rojo intenso."},
+  {id:"candy",name:"Candy",aliases:[],genes:["amelanistic","sunkissed"],type:"compound",
+   description:"Amel + Sunkissed. Rosa caramelo."},
+  {id:"strawberry",name:"Strawberry",aliases:[],genes:["hypo","sunkissed"],type:"compound",
+   description:"Hypo + Sunkissed. Fresa suave."},
+  {id:"sunglow",name:"Sunglow",aliases:[],genes:["amelanistic","hypo"],type:"compound",
+   description:"Amel + Hypo. Naranja brillante sin bordes blancos."},
+  {id:"mandarin",name:"Mandarin",aliases:[],genes:["amelanistic","carmel","hypo"],type:"compound",
+   description:"Amel + Carmel + Hypo. Mandarina intenso."},
+  {id:"topaz",name:"Topaz",aliases:[],genes:["amelanistic","lava"],type:"compound",
+   description:"Amel + Lava. Topacio dorado."},
+
+  // Miami Phase locales
+  {id:"miami",name:"Miami Phase",aliases:["Miami"],genes:["selective"],type:"line",inheritance:"polygenic"},
+  {id:"okeetee",name:"Okeetee",aliases:["Okeetee Phase","Abbotts Okeetee"],genes:["selective"],type:"line",inheritance:"polygenic",
+   description:"Monturas rojas intensas bordeadas de blanco brillante."},
+  {id:"reverse_okeetee",name:"Reverse Okeetee",aliases:["Reverse Okeetee"],genes:["amelanistic","selective"],type:"compound_line",
+   description:"Amel + Okeetee selectivo. Monturas rojas bordeadas en blanco."},
+
+  // Normales / Wild Type
+  {id:"normal",name:"Normal (Wild Type)",aliases:["Classic","Carolina","Wild Type"],genes:["wild_type"],type:"wild",
+   description:"Fenotipo natural. Monturas rojo-anaranjado sobre fondo naranja."},
+  {id:"unknown",name:"Desconocido",aliases:["Unknown","?"],genes:[],type:"unknown"}
+];
+
+// ====== STATE ======
+let images = [];
+let currentIdx = -1;
+let labels = {};
+let statuses = {};
+
+// ====== INIT ======
+async function init() {
+  await loadImages();
+  renderList();
+}
+
+async function loadImages() {
+  const resp = await fetch('/api/images?per_page=500');
+  if (!resp.ok) return;
+  const data = await resp.json();
+  images = data.images || [];
+  document.getElementById('totalCount').textContent = images.length + ' imágenes';
+  updateStats();
+  if (images.length > 0) selectImage(0);
+}
+
+async function loadLabels() {
+  try {
+    const resp = await fetch('/api/stats');
+    if (resp.ok) {
+      const stats = await resp.json();
+      // Load local label state from the server
+      for (const img of images) {
+        if (img.labeled) {
+          labels[img.filename] = img.morph;
         }
+      }
+    }
+  } catch(e) {}
+}
 
-        function renderGallery(images) {
-            const gallery = document.getElementById("gallery");
-            if (images.length === 0) {
-                gallery.innerHTML = '<div class="empty-state"><h2>✅ ¡Todas etiquetadas!</h2><p>No hay más imágenes pendientes.</p></div>';
-                return;
-            }
-            
-            gallery.innerHTML = images.map(img => {
-                const morph = pendingLabels[img.filename] || img.morph;
-                return `<div class="image-card">
-                    <div class="filename">${img.filename}</div>
-                    <img src="${img.url}" loading="lazy">
-                    <div class="label-actions">
-                        ${MORPHS.map(m => 
-                            `<button class="${m === 'unknown' ? 'unknown-btn ' : ''}${morph === m ? 'active' : ''}" 
-                                     onclick="labelImage('${img.filename}', '${m}', this)">${m}</button>`
-                        ).join('')}
-                    </div>
-                </div>`;
-            }).join('');
-        }
+// ====== SELECT IMAGE ======
+function selectImage(idx) {
+  if (idx < 0 || idx >= images.length) return;
+  currentIdx = idx;
+  const img = images[idx];
+  
+  // Update main image
+  const mainImg = document.getElementById('mainImage');
+  mainImg.src = img.url;
+  mainImg.style.display = 'block';
+  mainImg.style.transform = 'scale(1)';
+  mainImg.style.cursor = 'grab';
+  
+  document.getElementById('currentFilename').textContent = img.filename;
+  document.getElementById('navPosition').textContent = `${idx + 1} / ${images.length}`;
+  document.getElementById('imgFile').textContent = img.filename;
+  
+  // Load existing label
+  const morph = labels[img.filename] || '';
+  document.getElementById('currentMorph').textContent = morph || '—';
+  document.getElementById('imgMorph').textContent = morph || '—';
+  document.getElementById('morphInput').value = morph;
+  
+  const status = statuses[img.filename] || 'pending';
+  const statusLabels = {pending:'Pendiente',reviewed:'Revisado',inconsistent:'Inconsistente',error:'Posible error',lowq:'Baja calidad'};
+  document.getElementById('imgStatus').textContent = statusLabels[status] || 'Pendiente';
+  
+  // Update active in list
+  document.querySelectorAll('.image-item').forEach(el => el.classList.remove('active'));
+  const listItem = document.querySelector(`[data-idx="${idx}"]`);
+  if (listItem) listItem.classList.add('active');
+  listItem?.scrollIntoView({block:'nearest'});
+  
+  // Update conf
+  const conf = morph ? 0.85 : 0;
+  document.getElementById('confBar').style.width = (conf * 100) + '%';
+  document.getElementById('confBar').style.background = conf > 0.7 ? 'var(--green)' : conf > 0.4 ? 'var(--amber)' : 'var(--text-tertiary)';
+  document.getElementById('confValue').textContent = (conf * 100).toFixed(0) + '%';
+  
+  updateGenetics(morph);
+  updateAliases(morph);
+  updateWarnings(morph, img);
+}
 
-        function renderPagination(data) {
-            const nav = document.getElementById("pagination");
-            let html = `<button onclick="loadPage(1)" ${currentPage === 1 ? 'disabled' : ''}>«</button>`;
-            html += `<button onclick="loadPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
-            
-            for (let i = Math.max(1, currentPage - 3); i <= Math.min(data.total_pages, currentPage + 3); i++) {
-                html += `<button onclick="loadPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
-            }
-            
-            html += `<button onclick="loadPage(${currentPage + 1})" ${currentPage === data.total_pages ? 'disabled' : ''}>›</button>`;
-            html += `<button onclick="loadPage(${data.total_pages})" ${currentPage === data.total_pages ? 'disabled' : ''}>»</button>`;
-            
-            if (data.total_pages > 0) {
-                html += `<span style="color:#64748b;font-size:0.75rem;margin-left:0.5rem">Página ${currentPage}/${data.total_pages}</span>`;
-            }
-            
-            nav.innerHTML = html;
-        }
+// ====== RENDER LIST ======
+function renderList(filtered) {
+  const list = document.getElementById('imageList');
+  const items = filtered || images;
+  list.innerHTML = items.map((img, i) => {
+    const realIdx = images.indexOf(img);
+    const status = statuses[img.filename] || 'pending';
+    const morph = labels[img.filename] || '';
+    const badgeClass = {pending:'badge-pending',reviewed:'badge-reviewed',inconsistent:'badge-inconsistent',error:'badge-error',lowq:'badge-lowq'}[status] || 'badge-pending';
+    return `<div class="image-item ${realIdx === currentIdx ? 'active' : ''}" data-idx="${realIdx}" onclick="selectImage(${realIdx})">
+      <div class="thumb"><img src="${img.url}" loading="lazy"></div>
+      <div class="info">
+        <div class="name">${img.filename}</div>
+        <div class="sub">${morph || '<span style="color:var(--text-tertiary)">sin etiqueta</span>'}</div>
+      </div>
+      <div class="badge ${badgeClass}"></div>
+    </div>`;
+  }).join('');
+}
 
-        async function labelImage(filename, morph, btn) {
-            const status = document.getElementById("saveStatus");
-            status.textContent = "Guardando...";
-            status.className = "save-status saving";
-            
-            pendingLabels[filename] = morph;
-            
-            try {
-                const resp = await fetch("/api/label", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({filename, morph})
-                });
-                
-                if (resp.ok) {
-                    status.textContent = `✓ ${filename} → ${morph}`;
-                    status.className = "save-status saved";
-                    
-                    // Update buttons for this card
-                    const buttons = btn.parentElement.querySelectorAll("button");
-                    buttons.forEach(b => b.classList.remove("active"));
-                    btn.classList.add("active");
-                    
-                    // Refresh stats
-                    const statsResp = await fetch("/api/stats");
-                    const stats = await statsResp.json();
-                    document.getElementById("stats").textContent = 
-                        `${stats.labeled} etiquetadas · ${stats.unlabeled} pendientes · ${stats.total} total`;
-                    document.getElementById("progress").style.width = stats.progress + "%";
-                    
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(() => {
-                        status.textContent = "Listo";
-                        status.className = "save-status";
-                    }, 2000);
-                } else {
-                    status.textContent = "✗ Error al guardar";
-                    status.className = "save-status error";
-                }
-            } catch(e) {
-                status.textContent = "✗ Error de red";
-                status.className = "save-status error";
-            }
-        }
+// ====== FILTER ======
+function filterImages() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  if (!q) return renderList(images);
+  renderList(images.filter(img => img.filename.toLowerCase().includes(q)));
+}
 
-        // Load first page
-        loadPage(1);
-    </script>
+// ====== LABEL IMAGE ======
+async function assignMorph(morph) {
+  if (currentIdx < 0) return;
+  const img = images[currentIdx];
+  labels[img.filename] = morph;
+  document.getElementById('currentMorph').textContent = morph || '—';
+  document.getElementById('imgMorph').textContent = morph || '—';
+  
+  // Save to server
+  await fetch('/api/label', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({filename: img.filename, morph: morph || 'unknown'})
+  });
+  
+  renderList();
+  updateStats();
+  updateGenetics(morph);
+  updateAliases(morph);
+  updateWarnings(morph, img);
+  
+  const conf = morph ? 0.85 : 0;
+  document.getElementById('confBar').style.width = (conf * 100) + '%';
+  document.getElementById('confBar').style.background = conf > 0.7 ? 'var(--green)' : conf > 0.4 ? 'var(--amber)' : 'var(--text-tertiary)';
+  document.getElementById('confValue').textContent = (conf * 100).toFixed(0) + '%';
+}
+
+async function setStatus(status) {
+  if (currentIdx < 0) return;
+  const img = images[currentIdx];
+  statuses[img.filename] = status;
+  const labels_display = {pending:'Pendiente',reviewed:'Revisado',inconsistent:'Inconsistente',error:'Posible error',lowq:'Baja calidad'};
+  document.getElementById('imgStatus').textContent = labels_display[status] || 'Pendiente';
+  renderList();
+  updateStats();
+}
+
+// ====== MORPH SEARCH ======
+function searchMorphs(query) {
+  const suggestions = document.getElementById('morphSuggestions');
+  if (!query.trim()) { suggestions.classList.remove('show'); return; }
+  
+  const q = query.toLowerCase();
+  const results = MORPH_DB.filter(m => 
+    m.name.toLowerCase().includes(q) ||
+    m.aliases.some(a => a.toLowerCase().includes(q)) ||
+    m.genes.some(g => g.toLowerCase().includes(q))
+  ).slice(0, 12);
+  
+  if (results.length === 0) { suggestions.classList.remove('show'); return; }
+  
+  suggestions.innerHTML = results.map(m => 
+    `<div onclick="selectMorph('${m.name}')" data-morph="${m.name}">
+      <span>${m.name}</span>
+      <span class="alias">${m.type} · ${m.aliases.slice(0,2).join(', ')}</span>
+    </div>`
+  ).join('');
+  suggestions.classList.add('show');
+  highlightSuggestion(0);
+}
+
+let suggestionIdx = -1;
+function highlightSuggestion(idx) {
+  const items = document.querySelectorAll('#morphSuggestions div');
+  items.forEach(el => el.classList.remove('highlighted'));
+  if (items[idx]) { items[idx].classList.add('highlighted'); suggestionIdx = idx; }
+}
+
+function onMorphKeydown(e) {
+  const suggestions = document.getElementById('morphSuggestions');
+  if (!suggestions.classList.contains('show')) {
+    if (e.key === 'Enter' && document.getElementById('morphInput').value.trim()) {
+      assignMorph(document.getElementById('morphInput').value.trim());
+    }
+    return;
+  }
+  
+  const items = document.querySelectorAll('#morphSuggestions div');
+  if (e.key === 'ArrowDown') { e.preventDefault(); highlightSuggestion(Math.min(suggestionIdx + 1, items.length - 1)); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); highlightSuggestion(Math.max(suggestionIdx - 1, 0)); }
+  else if (e.key === 'Enter') { e.preventDefault(); selectMorph(items[suggestionIdx]?.dataset.morph); }
+  else if (e.key === 'Escape') { suggestions.classList.remove('show'); }
+}
+
+function selectMorph(name) {
+  document.getElementById('morphInput').value = name;
+  document.getElementById('morphSuggestions').classList.remove('show');
+  assignMorph(name);
+}
+
+// ====== GENETICS ======
+function updateGenetics(morphName) {
+  const panel = document.getElementById('geneticsPanel');
+  if (!morphName || morphName === '—' || morphName === 'Desconocido') {
+    panel.innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);">Selecciona un morph para ver información genética</div>';
+    return;
+  }
+  
+  const morph = MORPH_DB.find(m => m.name === morphName);
+  if (!morph) {
+    panel.innerHTML = '<div style="font-size:11px;color:var(--text-tertiary);">Morph no encontrado en la base de datos genética</div>';
+    return;
+  }
+  
+  let html = `<div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Genes detectados</div>
+    <div style="margin-bottom:8px;">`;
+  if (morph.genes.length > 0 && morph.genes[0] !== 'wild_type') {
+    morph.genes.forEach(g => { html += `<span class="gene">${g}</span>`; });
+  } else {
+    html += `<span style="font-size:11px;color:var(--text-tertiary);">Genotipo silvestre</span>`;
+  }
+  html += `</div>`;
+  html += `<div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Herencia</div>
+    <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;">${morph.inheritance || '—'}</div>`;
+  html += `<div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Descripción</div>
+    <div style="font-size:11px;color:var(--text-secondary);line-height:1.4;">${morph.description || '—'}</div>`;
+  
+  // Related morphs
+  const related = MORPH_DB.filter(m => 
+    m.id !== morph.id && 
+    m.genes.some(g => morph.genes.includes(g)) &&
+    morph.genes.some(g => g !== 'selective')
+  ).slice(0, 5);
+  if (related.length > 0) {
+    html += `<div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px;">Morphs relacionados</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">`;
+    related.forEach(r => { html += `<span class="gene" style="background:var(--green-bg);color:var(--green);cursor:pointer;" onclick="document.getElementById('morphInput').value='${r.name}';searchMorphs('${r.name}')">${r.name}</span>`; });
+    html += `</div>`;
+  }
+  
+  panel.innerHTML = html;
+}
+
+// ====== ALIASES ======
+function updateAliases(morphName) {
+  const panel = document.getElementById('aliasesPanel');
+  if (!morphName || morphName === '—') {
+    panel.innerHTML = '<span style="font-size:11px;color:var(--text-tertiary);">—</span>';
+    return;
+  }
+  const morph = MORPH_DB.find(m => m.name === morphName);
+  if (!morph || morph.aliases.length === 0) {
+    panel.innerHTML = '<span style="font-size:11px;color:var(--text-tertiary);">Sin alias registrados</span>';
+    return;
+  }
+  panel.innerHTML = morph.aliases.map(a => `<span class="alias-tag">${a}</span>`).join('');
+}
+
+// ====== WARNINGS ======
+function updateWarnings(morph, img) {
+  const panel = document.getElementById('warningsPanel');
+  let warnings = [];
+  
+  if (!morph) {
+    warnings.push('Esta imagen no tiene morph asignado.');
+  } else {
+    const dbMorph = MORPH_DB.find(m => m.name === morph);
+    if (!dbMorph) {
+      warnings.push('Morph no reconocido en la base de datos genética.');
+    }
+    if (dbMorph && dbMorph.genes.includes('selective')) {
+      warnings.push('Morph de línea selectiva (poligénico). La apariencia puede variar significativamente.');
+    }
+    if (dbMorph && dbMorph.genes.length > 2) {
+      warnings.push('Combinación genética compleja de triple o más genes. Verificar fenotipo cuidadosamente.');
+    }
+    if (img && !img.labeled) {
+      warnings.push('Primera vez que se etiqueta esta imagen. Revisar consistencia con otras del mismo morph.');
+    }
+  }
+  
+  if (warnings.length === 0) {
+    panel.innerHTML = '<div style="font-size:11px;color:var(--green);">✓ Sin advertencias</div>';
+    return;
+  }
+  
+  panel.innerHTML = warnings.slice(0, 3).map(w => 
+    `<div class="warning">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+      <span>${w}</span>
+    </div>`
+  ).join('');
+}
+
+// ====== STATS ======
+function updateStats() {
+  const labeled = Object.keys(labels).length;
+  document.getElementById('labeledCount').textContent = labeled + ' etiquetadas';
+}
+
+// ====== ZOOM & PAN ======
+let isPanning = false, startX, startY, tx = 0, ty = 0, scale = 1;
+const canvasWrap = document.getElementById('canvasWrap');
+const mainImg = document.getElementById('mainImage');
+
+canvasWrap.addEventListener('wheel', e => {
+  if (!mainImg.style.display || mainImg.style.display === 'none') return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.1 : 0.1;
+  scale = Math.max(0.2, Math.min(5, scale + delta));
+  mainImg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+  mainImg.style.cursor = scale > 1 ? 'grab' : 'default';
+  document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
+});
+
+mainImg.addEventListener('mousedown', e => {
+  if (scale <= 1) return;
+  isPanning = true;
+  startX = e.clientX - tx;
+  startY = e.clientY - ty;
+  mainImg.style.cursor = 'grabbing';
+});
+
+window.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  tx = e.clientX - startX;
+  ty = e.clientY - startY;
+  mainImg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+});
+
+window.addEventListener('mouseup', () => {
+  isPanning = false;
+  if (scale > 1) mainImg.style.cursor = 'grab';
+});
+
+// Double-click to reset zoom
+mainImg.addEventListener('dblclick', () => { scale = 1; tx = 0; ty = 0; mainImg.style.transform = 'scale(1)'; mainImg.style.cursor = 'default'; document.getElementById('zoomLevel').textContent = '100%'; });
+
+// ====== KEYBOARD SHORTCUTS ======
+window.addEventListener('keydown', e => {
+  // Don't trigger if typing in search/input
+  if (['INPUT'].includes(e.target.tagName) && !['1','2','3','4','5'].includes(e.key)) return;
+  
+  switch(e.key) {
+    case 'ArrowLeft': e.preventDefault(); selectImage(currentIdx - 1); break;
+    case 'ArrowRight': e.preventDefault(); selectImage(currentIdx + 1); break;
+    case '1': assignMorph('Normal (Wild Type)'); break;
+    case '2': assignMorph('Amelanistic'); break;
+    case '3': assignMorph('Anerythristic'); break;
+    case '4': assignMorph('Motley'); break;
+    case '5': assignMorph('Snow'); break;
+    case 'r': setStatus('reviewed'); break;
+    case 'e': setStatus('error'); break;
+    case 'i': setStatus('inconsistent'); break;
+    case 'q': setStatus('lowq'); break;
+  }
+});
+
+// ====== START ======
+init();
+</script>
 </body>
 </html>
